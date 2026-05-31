@@ -9,11 +9,19 @@ from apps.bookings.models import Booking
 from .serializers import VehicleSerializer, VehicleSearchSerializer
 from rest_framework.pagination import PageNumberPagination
 
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+
 
 class CreateVehicleView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="Create Vehicle",
+        description="Create a new vehicle.",
+        request=VehicleSerializer,
+        responses={200: VehicleSerializer}
+    )
     def post(self, request):
 
         user_profile = request.user.userprofile
@@ -21,10 +29,10 @@ class CreateVehicleView(APIView):
         if user_profile.role != 'owner':
             return Response({"error":"Only vehicle owners can add vehicles"})
 
-    
         serializer = VehicleSerializer(data=request.data)
+
         if serializer.is_valid():
-    
+
             serializer.save(owner=request.user.userprofile)
             return Response(serializer.data)
 
@@ -35,6 +43,11 @@ class MyVehicles(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="My Vehicles",
+        description="Get all vehicles owned by logged in owner.",
+        responses={200: VehicleSerializer(many=True)}
+    )
     def get(self, request):
         vehicles = Vehicle.objects.filter(owner=request.user.userprofile)
         serializer = VehicleSerializer(vehicles, many=True)
@@ -45,6 +58,12 @@ class SearchVehicle(APIView):
 
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        summary="Search Vehicles",
+        description="Search available vehicles by city and date range.",
+        request=VehicleSearchSerializer,
+        responses={200: VehicleSerializer(many=True)}
+    )
     def post(self, request):
 
         serializer = VehicleSearchSerializer(data=request.data)
@@ -89,6 +108,11 @@ class ListVehicle(APIView):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    @extend_schema(
+        summary="List Vehicles",
+        description="Get all active vehicles.",
+        responses={200: VehicleSerializer(many=True)}
+    )
     def get(self, request):
 
         page = request.GET.get("page", 1)
@@ -113,6 +137,11 @@ class ListVehicle(APIView):
 
 class DetailsVehicle(APIView):
 
+    @extend_schema(
+        summary="Vehicle Details",
+        description="Get details of a specific vehicle.",
+        responses={200: VehicleSerializer}
+    )
     def get(self, request, pk):
         vehicle = get_object_or_404(Vehicle, pk=pk, is_active=True)
         serializer = VehicleSerializer(vehicle)
@@ -123,6 +152,12 @@ class UpdateVehicle(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="Update Vehicle",
+        description="Update vehicle information.",
+        request=VehicleSerializer,
+        responses={200: VehicleSerializer}
+    )
     def put(self, request, pk):
 
         vehicle = get_object_or_404(Vehicle, pk=pk)
@@ -144,6 +179,14 @@ class DeleteVehicle(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="Delete Vehicle",
+        description="Delete a vehicle owned by the logged in user.",
+        responses={
+            200: OpenApiResponse(description="Vehicle deleted successfully"),
+            403: OpenApiResponse(description="You are not the owner")
+        }
+    )
     def delete(self, request, pk):
 
         vehicle = get_object_or_404(Vehicle, pk=pk)
