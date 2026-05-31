@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'apps.vehicles',
     'apps.bookings',
     'apps.common',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -72,7 +73,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = 'rentme.wsgi.application'
 
 
 # Database
@@ -129,6 +130,9 @@ REST_FRAMEWORK = {
 
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 5,
+    
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
 }
 
 from datetime import timedelta
@@ -156,7 +160,7 @@ DATABASES = {
         'NAME': 'rental_db',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'db',
+        'HOST': 'localhost',
         'PORT': 5432,
     }
 }
